@@ -173,3 +173,12 @@ deck = [
     "4b",
     "4e"
 ]
+
+EnvidoPuntosPorApuesta = {
+    "envido": 2,
+    "real envido": 3,
+    "envido envido": 4,
+    "envido real envido": 5,
+    "envido envido real envido": 7,
+    "falta envido": 15
+}

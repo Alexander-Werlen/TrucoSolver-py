@@ -9,7 +9,6 @@ def functionScore(cardP1, cardP2):  # oponent wants to maximize
         # Funcion a revisar para conseguir mejor performance. Pero creo que está bien
         return(dif+39)
 
-
 # Generalizar para que de igual la cantidad de cartas que tiene cada mano
 def whichCardMinimizesFunctionScore(myHand, othersHand):
     # output: para cada carta de handP1 un puntaje (normalizado a 1). Se debería de intentar minimizar ese puntaje
