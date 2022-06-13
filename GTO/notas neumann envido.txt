@@ -1,0 +1,5 @@
+maximizar función de value del modelo para determinar cuanto aumentar la apuesta del envido en cada situación.
+
+Si todavía no se cantó envido entonces el modelo es diferente en el check (no es +-1 sino 0). Modificar y resolver para poder determinar si ser el primero en cantar envido o no.
+
+bet and pot tieneden a infinito si los puntos del envido terminan la partida.

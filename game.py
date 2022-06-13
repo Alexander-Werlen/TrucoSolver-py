@@ -112,7 +112,7 @@ def main():
                                     puntos=P1mayorEnvido))
                                 knownHandOfP1[1] = P1mayorEnvido
                         # Actualizar posibles manos de cada jugador!!!!!!!!!
-                        # Checkear si el juego terminó
+                        # Checkear si el juego terminó !!!!!
                         isPlayingEnvido = False
                         continue
 
@@ -175,7 +175,7 @@ def main():
                                     puntos=P1mayorEnvido))
                                 knownHandOfP1[1] = P1mayorEnvido
                         # Actualizar posibles manos de cada jugador!!!!!!!!!
-                        # Checkear si el juego terminó
+                        # Checkear si el juego terminó !!!!!
                         isPlayingEnvido = False
                         continue
 

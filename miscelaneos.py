@@ -182,3 +182,11 @@ EnvidoPuntosPorApuesta = {
     "envido envido real envido": 7,
     "falta envido": 15
 }
+
+dicPossiblesFormasDeEscalarEnvido = {
+    2: [4, 5, 15],
+    3: [15],
+    4: [15],
+    5: [7, 15],
+    7: [15],
+}
