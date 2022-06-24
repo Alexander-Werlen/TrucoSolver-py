@@ -40,7 +40,6 @@ RanksDictionary = {  # El valor representa la cantidad de cartas que son peores 
     "4o": 0,
     "4b": 0,
     "4e": 0
-
 }
 
 EnvidoValuesDictionary = {
@@ -183,10 +182,25 @@ EnvidoPuntosPorApuesta = {
     "falta envido": 15
 }
 
+EnvidoCantosPorPuntos = {
+    2: "envido",
+    3: "real envido",
+    4: "envido envido",
+    5: "envido real envido",
+    7: "envido envido real envido",
+    15: "falta envido"
+}
 dicPossiblesFormasDeEscalarEnvido = {
+    1: [2, 3, 15],
     2: [4, 5, 15],
     3: [15],
     4: [15],
     5: [7, 15],
     7: [15],
+}
+
+dicPossiblesFormasDeEscalarTruco = {
+    1: 2,
+    2: 3,
+    3: 4,
 }

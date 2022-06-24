@@ -26,8 +26,8 @@ def trucoVonNeumann(IamP1, x, pot, bet):
 
 
 def calculateOptimalBet(pot):
-
-    return max([(bet-bet*((2*bet**2+4*bet*pot+pot**2)/(2*bet**2+5*bet*pot+2*pot**2)))/(bet+pot) for bet in dicPossiblesFormasDeEscalarEnvido[pot]])
+    #Eligiendo la bet que maximisa al valor esperado del juego.
+    return max(dicPossiblesFormasDeEscalarEnvido[pot], key=lambda bet: (bet-bet*((2*bet**2+4*bet*pot+pot**2)/(2*bet**2+5*bet*pot+2*pot**2)))/(bet+pot))
 
 
 def envidoVonNeumann(IamP1, x, pot, bet):
@@ -35,6 +35,7 @@ def envidoVonNeumann(IamP1, x, pot, bet):
     returns:
     true: if should bet or call
     false: if should check or fold 
+    ..., bet: None if doesn't matter, bet if wants to raise
 
     inputs:
     x: prob of winning envido
@@ -46,7 +47,8 @@ def envidoVonNeumann(IamP1, x, pot, bet):
     if (IamP1):
         if (pot == 0):
             # VonNeumann modificado
-            return False if x > 1/3 and x < 2/3 else True
+            # bets envido
+            return (False, None) if x > 1/3 and x < 2/3 else (True, 2)
 
         elif (bet is None):
             # Calculamos bet optimo
@@ -56,16 +58,16 @@ def envidoVonNeumann(IamP1, x, pot, bet):
             c = 2*b-1
             a = (bet-bet*b)/(bet+pot)
 
-            return False if x > a and x < b else True
+            return (False, None) if x > a and x < b else (True, bet)
 
     else:
         if (pot == 1):
             # Von Neumann modificado
-            return False if x < 2/3 else True
+            return (False, None) if x < 2/3 else (True, None)
 
         else:
             b = (2*bet**2+4*bet*pot+pot**2)/(2*bet**2+5*bet*pot+2*pot**2)
             c = 2*b-1
             a = (bet-bet*b)/(bet+pot)
 
-            return False if x < c else True
+            return (False, None) if x < c else (True, None)
