@@ -37,17 +37,10 @@ def gameEnded(score):
 
 def handIsPossible(handToCheck, knownHandOfOponent):
     # Returns True if hand is possible given the conditions of the knownHand. False if not
-    """ 
-    Inputs:
-    1) handToCheck: ls[3]
-    2) knownHandOfOponent: ls[[x<=3], puntosEnvido]
-     """
-    for card in knownHandOfOponent[0]:
-        if (card not in handToCheck):
-            return False
-    if (knownHandOfOponent[1]):
-        if (calculateEnvidoPoints(handToCheck) != knownHandOfOponent[1]):
-            return False
+
+    if (calculateEnvidoPoints(handToCheck[:].append(knownHandOfOponent[0])) != knownHandOfOponent[1]):
+        return False
+
     return True
 
 

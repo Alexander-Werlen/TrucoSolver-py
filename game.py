@@ -40,10 +40,34 @@ class Game:
             print(self.game.gameScore)
             print("-----------------")
 
+        def informarWhoWonTruco(self, p1WonTruco):
+            print("-----------------")
+            print("{jugador} gano los {puntos} del truco".format(
+                jugador="P1" if p1WonTruco else "P2", puntos=self.game.trucoPointsAtPlay))
+            print("-----------------")
+
         def informarManoP2(self):
             print("-----------------")
             print("Your hand:")
             print(self.game.handP2)
+            print("-----------------")
+
+        def informarTrucoEscalation(self):
+            print("-----------------")
+            print("{jugador} canta {canto}".format(
+                jugador="P1" if self.game.isP1Turn else "P2", canto=self.game.trucoPointsAtBet))
+            print("-----------------")
+
+        def informarTrucoAccept(self):
+            print("-----------------")
+            print("{jugador} quiere.".format(
+                jugador="P1" if self.game.isP1Turn else "P2"))
+            print("-----------------")
+
+        def informarTrucoRejection(self):
+            print("-----------------")
+            print("{jugador} NO quiere.".format(
+                jugador="P1" if self.game.isP1Turn else "P2"))
             print("-----------------")
 
         def informarEscalaPuntosEnvido(self):
@@ -70,6 +94,12 @@ class Game:
                         atPlay=self.game.envidoPointsAtPlay, p2=puntosP2))
             print("-----------------")
 
+        def informarCartasEnMesa(self):
+            print("-----------------")
+            print("Cartas en mesa:")
+            print(self.game.cardsInMesa)
+            print("-----------------")
+
     def checkIfGameEnded(self):
         # Should check if game ended every time points are added to the score
         if (self.gameScore[0] > 14):
@@ -82,13 +112,41 @@ class Game:
     def checkIfShouldStartNewRound(self):
         if ((self.currentTrucoScore[0] >= 2 or self.currentTrucoScore[1] >= 2)
                 and not (self.currentTrucoScore[0] == 2 and self.currentTrucoScore[1] == 2 and self.whoWonPrimera is None)):
-            self.shouldStartNewRound = True
+
+            if(self.currentTrucoScore[0] == self.currentTrucoScore[1]):
+                p1WonTruco = self.whoIsMano
+                self.gameScore[0 if self.whoIsMano else 1] += self.trucoPointsAtPlay
+
+            else:
+                p1WonTruco = self.currentTrucoScore[0] > self.currentTrucoScore[1]
+                self.gameScore[0 if p1WonTruco else 1] += self.trucoPointsAtPlay
+
+            self.output.informarCartasEnMesa()
+            self.output.informarWhoWonTruco(p1WonTruco)
+            self.checkIfGameEnded()
+            self.startNewRound()
 
     def giveControlToTheOtherPlayer(self):
         self.isP1Turn = not self.isP1Turn
 
     def actualizarPossibleHandsOfP2(self):
-        return
+        carta = self.cardsInMesa[self.currentTrucoStage][1]
+        if (carta is not None):
+            # Actualizando knownHandOfP2
+            if (self.knownHandOfP2[0] and self.knownHandOfP2[0][-1] != carta):
+                self.knownHandOfP2[0].append(carta)
+            elif (not self.knownHandOfP2[0]):
+                self.knownHandOfP2[0].append(carta)
+
+        if (self.knownHandOfP2[0]):
+            if (len(self.possibleHandsP2[0])+len(self.knownHandOfP2[0]) != 3):
+                # tenemos que recortar la mano
+                self.possibleHandsP2 = [
+                    hand.remove(carta) for hand in self.possibleHandsP2 if carta in hand]
+
+        if (self.knownHandOfP2[1] is not None):
+            self.possibleHandsP2 = [
+                hand for hand in self.possibleHandsP2 if handIsPossible(hand, self.knownHandOfP2)]
 
     def faltaEnvidoPoints(self):
         return min([15-self.gameScore[0], 15-self.gameScore[1]])
@@ -106,7 +164,7 @@ class Game:
             return False
 
     def startEnvidoExchange(self, initialBet):
-        if (initialBet not in EnvidoPuntosPorApuesta.values()):
+        if (initialBet not in dicPossiblesFormasDeEscalarEnvido[1]):
             raise ValueError("Puntos de bet no validos.")
 
         if (initialBet == 15):
@@ -169,17 +227,71 @@ class Game:
         self.decisionAboutEnvidoBetHasToBeMade = False
         self.envidoAlreadyWasPlayed = True
         # dando control a quien sea mano para continuar juego
-        self.isP1Turn = self.whoIsMano
+        self.isP1Turn = self.isP1TrucoTurn
 
     def escalateTruco(self, bet):
         if (bet != dicPossiblesFormasDeEscalarTruco[self.trucoPointsAtPlay]):
             raise ValueError("Puntos de bet no validos. Tried to escalate truco to {bet} from {atPlay}".format(
                 bet=str(bet), atPlay=str(self.trucoPointsAtPlay)))
+        self.decisionAboutTrucoBetHasToBeMade = True
 
         self.trucoPointsAtPlay = self.trucoPointsAtBet
         self.trucoPointsAtBet = bet
 
         self.output.informarTrucoEscalation()
+        self.giveControlToTheOtherPlayer()
+
+    def acceptTruco(self):
+        self.decisionAboutTrucoBetHasToBeMade = False
+        self.trucoPointsAtPlay = self.trucoPointsAtBet
+        self.output.informarTrucoAccept()
+        self.isP1Turn = self.isP1TrucoTurn
+
+    def rejectTruco(self):
+        self.gameScore[1 if self.isP1Turn else 0] += self.trucoPointsAtPlay
+
+        self.output.informarTrucoRejection()
+        self.startNewRound()
+
+    def tirarCarta(self, carta):
+        if (self.decisionAboutEnvidoBetHasToBeMade or self.decisionAboutTrucoBetHasToBeMade):
+            raise Exception(
+                "Decision about points has to be made. Cannot throw card.")
+        if (carta not in self.handP1 if self.isP1Turn else self.handP2):
+            raise Exception("Carta no se encuentra en su mano")
+
+        self.cardsInMesa[self.currentTrucoStage][0 if self.isP1Turn else 1] = carta
+
+        (self.handP1 if self.isP1Turn else self.handP2).remove(carta)
+
+        self.actualizarPossibleHandsOfP2()
+        self.actualizarTrucoStage()
+
+    def actualizarTrucoStage(self):
+        cP1 = self.cardsInMesa[self.currentTrucoStage][0]
+        cP2 = self.cardsInMesa[self.currentTrucoStage][1]
+        if (cP1 is not None and cP2 is not None):
+            rP1 = RanksDictionary[cP1]
+            rP2 = RanksDictionary[cP2]
+            if (rP1 > rP2):
+                self.currentTrucoScore[0] += 1
+                self.isP1TrucoTurn = True
+                if (self.whoWonPrimera is None):
+                    self.whoWonPrimera = True  # gano P1
+            elif (rP2 > rP1):
+                self.currentTrucoScore[1] += 1
+                self.isP1TrucoTurn = False
+                if (self.whoWonPrimera is None):
+                    self.whoWonPrimera = False  # gano P2
+            else:
+                self.isP1TrucoTurn = self.whoIsMano
+                self.currentTrucoScore[0] += 1
+                self.currentTrucoScore[1] += 1
+
+            self.currentTrucoStage += 1
+            self.checkIfShouldStartNewRound()
+        else:
+            self.isP1TrucoTurn = not self.isP1TrucoTurn
 
     def startNewRound(self):
         self.output.informarInicioNuevaRonda()
@@ -200,6 +312,7 @@ class Game:
 
         self.whoIsMano = not self.whoIsMano  # invirtiendo quien es mano
         self.isP1Turn = self.whoIsMano
+        self.isP1TrucoTurn = self.isP1Turn
 
         self.handP1, self.handP2, self.currentDeck = repartir()
 

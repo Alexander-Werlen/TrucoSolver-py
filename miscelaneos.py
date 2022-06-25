@@ -190,6 +190,11 @@ EnvidoCantosPorPuntos = {
     7: "envido envido real envido",
     15: "falta envido"
 }
+TrucoCantosPorPuntos = {
+    2: "truco",
+    3: "retruco",
+    4: "vale cuatro"
+}
 dicPossiblesFormasDeEscalarEnvido = {
     1: [2, 3, 15],
     2: [4, 5, 15],
