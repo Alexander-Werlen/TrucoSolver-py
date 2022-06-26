@@ -26,7 +26,7 @@ def trucoVonNeumann(IamP1, x, pot, bet):
 
 
 def calculateOptimalBet(pot):
-    #Eligiendo la bet que maximisa al valor esperado del juego.
+    # Eligiendo la bet que maximisa al valor esperado del juego.
     return max(dicPossiblesFormasDeEscalarEnvido[pot], key=lambda bet: (bet-bet*((2*bet**2+4*bet*pot+pot**2)/(2*bet**2+5*bet*pot+2*pot**2)))/(bet+pot))
 
 

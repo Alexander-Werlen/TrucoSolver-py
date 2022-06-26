@@ -1,4 +1,4 @@
-from GTO.vonNeumannModels import envidoVonNeumann
+from GTO.vonNeumannModels import envidoVonNeumann, trucoVonNeumann
 
 
 def shouldEscalateTrucoPoints(probWinTruco, gamescore, trucoPointsAtBet, trucoPointsAtPlay):
@@ -8,6 +8,22 @@ def shouldEscalateTrucoPoints(probWinTruco, gamescore, trucoPointsAtBet, trucoPo
     0 if should accept
     x if wants to escalate to x points.
      """
+    wantsToAccept = trucoVonNeumann(
+        False, probWinTruco, trucoPointsAtPlay, trucoPointsAtBet)
+
+    if (wantsToAccept):
+        if (trucoPointsAtBet == 4):
+            return 0
+        wantsToRaise = envidoVonNeumann(
+            True, probWinTruco, trucoPointsAtBet, None)
+        if (wantsToRaise):
+            desiredPoints = trucoPointsAtBet+1
+        else:
+            desiredPoints = 0
+    else:
+        desiredPoints = -15
+
+    return desiredPoints
 
 
 def shouldEscalateEnvidoPoints(probOfWinningEnvido, gameScore, envidoPointsAtBet, envidoPointsAtPlay):
