@@ -6,6 +6,7 @@ from decisionMakingFunctions import *
 from GTO.vonNeumannModels import trucoVonNeumann, envidoVonNeumann
 import random
 import itertools
+import copy
 
 
 class Game:
@@ -41,7 +42,7 @@ class Game:
 
         def informarWhoWonTruco(self, p1WonTruco):
             print("-----------------")
-            print("{jugador} gano los {puntos} del truco".format(
+            print("{jugador} gano los {puntos} puntos del truco".format(
                 jugador="P1" if p1WonTruco else "P2", puntos=self.game.trucoPointsAtPlay))
             print("-----------------")
 
@@ -54,7 +55,7 @@ class Game:
         def informarTrucoEscalation(self):
             print("-----------------")
             print("{jugador} canta {canto}".format(
-                jugador="P1" if self.game.isP1Turn else "P2", canto=self.game.trucoPointsAtBet))
+                jugador="P1" if self.game.isP1Turn else "P2", canto=TrucoCantosPorPuntos[self.game.trucoPointsAtBet]))
             print("-----------------")
 
         def informarTrucoAccept(self):
@@ -69,28 +70,34 @@ class Game:
                 jugador="P1" if self.game.isP1Turn else "P2"))
             print("-----------------")
 
+        def informarRechazoEnvido(self):
+            print("-----------------")
+            print("{jugador} NO quiere.".format(
+                jugador="P1" if self.game.isP1Turn else "P2"))
+            print("-----------------")
+
         def informarEscalaPuntosEnvido(self):
             print("-----------------")
             if (self.game.onFaltaEnvido):
                 print("{jugador} escalates to falta envido".format(
                     jugador="P1" if self.game.isP1Turn else "P2"))
             else:
-                print("{jugador} escalates to {puntos}".format(
+                print("{jugador} escalates envido to {puntos} puntos".format(
                     puntos=self.game.envidoPointsAtBet, jugador="P1" if self.game.isP1Turn else "P2"))
             print("-----------------")
 
         def informarCantoPuntosEnvido(self, puntosP1, puntosP2, p1Won):
             print("-----------------")
             if (p1Won):
-                print("P1 gana {atPLay} con {p1}.".format(
-                    atPlay=self.game.envidoPointsAtPlay, p1=puntosP1))
+                print("P1 gana {atPlay} con {p1}.".format(
+                    atPlay=EnvidoCantosPorPuntos[self.game.envidoPointsAtPlay], p1=puntosP1))
             else:
                 if (self.game.whoIsMano):
-                    print("P2 gana {atPLay} con {p2} puntos contra {p1}.".format(
-                        atPlay=self.game.envidoPointsAtPlay, p2=puntosP2, p1=puntosP1))
+                    print("P2 gana {atPlay} con {p2} puntos contra {p1}.".format(
+                        atPlay=EnvidoCantosPorPuntos[self.game.envidoPointsAtPlay], p2=puntosP2, p1=puntosP1))
                 else:
-                    print("P2 gana {atPLay} con {p2}.".format(
-                        atPlay=self.game.envidoPointsAtPlay, p2=puntosP2))
+                    print("P2 gana {atPlay} con {p2}.".format(
+                        atPlay=EnvidoCantosPorPuntos[self.game.envidoPointsAtPlay], p2=puntosP2))
             print("-----------------")
 
         def informarCartasEnMesa(self):
@@ -109,10 +116,11 @@ class Game:
             exit()
 
     def getFullHandP1(self):
-        return self.handP1[:] + [par[0] for par in self.cardsInMesa if par[0] is not None]
+        return copy.deepcopy(self.handP1) + [par[0] for par in self.cardsInMesa if par[0] is not None]
 
     def getFullPossibleHandsOfP2(self):
-        return [hand[:]+[par[1] for par in self.cardsInMesa if par[1] is not None] for hand in self.possibleHandsP2]
+
+        return [copy.deepcopy(hand)+[par[1] for par in self.cardsInMesa if (par[1] is not None)] for hand in self.possibleHandsP2]
 
     def checkIfShouldStartNewRound(self):
         if ((self.currentTrucoScore[0] >= 2 or self.currentTrucoScore[1] >= 2)
@@ -138,16 +146,16 @@ class Game:
         carta = self.cardsInMesa[self.currentTrucoStage][1]
         if (carta is not None):
             # Actualizando knownHandOfP2
-            if (self.knownHandOfP2[0] and self.knownHandOfP2[0][-1] != carta):
-                self.knownHandOfP2[0].append(carta)
-            elif (not self.knownHandOfP2[0]):
+            if (carta not in self.knownHandOfP2[0]):
                 self.knownHandOfP2[0].append(carta)
 
-        if (self.knownHandOfP2[0]):
+        if (len(self.knownHandOfP2[0]) != 0):
             if (len(self.possibleHandsP2[0])+len(self.knownHandOfP2[0]) != 3):
                 # tenemos que recortar la mano
                 self.possibleHandsP2 = [
-                    hand.remove(carta) for hand in self.possibleHandsP2 if carta in hand]
+                    hand for hand in self.possibleHandsP2 if carta in hand]
+                for hand in self.possibleHandsP2:
+                    hand.remove(carta)
 
         if (self.knownHandOfP2[1] is not None):
             self.possibleHandsP2 = [
@@ -184,9 +192,9 @@ class Game:
         self.giveControlToTheOtherPlayer()
 
     def escalateEnvidoExchange(self, bet):
-        if (bet not in dicPossiblesFormasDeEscalarEnvido[self.envidoPointsAtPlay]):
-            raise ValueError("Puntos de bet no validos. Tried to escalate envido to {bet} from {atPlay}".format(
-                bet=str(bet), atPlay=str(self.envidoPointsAtPlay)))
+        if (bet not in dicPossiblesFormasDeEscalarEnvido[self.envidoPointsAtBet]):
+            raise ValueError("Puntos de bet no validos. Tried to escalate envido to {bet} from {atBet}".format(
+                bet=str(bet), atBet=str(self.envidoPointsAtBet)))
         if (self.onFaltaEnvido):
             raise Exception(
                 "Tried to escalate envido points when already playing for falta envido.")
@@ -209,6 +217,8 @@ class Game:
 
         if (not acceptsBet):
             self.gameScore[1 if self.isP1Turn else 0] += self.envidoPointsAtPlay
+
+            self.output.informarRechazoEnvido()
 
         else:
             self.envidoPointsAtPlay = self.envidoPointsAtBet
@@ -235,15 +245,16 @@ class Game:
         # dando control a quien sea mano para continuar juego
         self.isP1Turn = self.isP1TrucoTurn
 
-    def escalateTruco(self, bet):
-        if (bet != dicPossiblesFormasDeEscalarTruco[self.trucoPointsAtPlay]):
-            raise ValueError("Puntos de bet no validos. Tried to escalate truco to {bet} from {atPlay}".format(
-                bet=str(bet), atPlay=str(self.trucoPointsAtPlay)))
+    def escalateTruco(self):
+        if (self.trucoPointsAtPlay >= 4):
+            raise ValueError("Max truco bet already reached")
         self.decisionAboutTrucoBetHasToBeMade = True
 
         self.trucoPointsAtPlay = self.trucoPointsAtBet
-        self.trucoPointsAtBet = bet
+        self.trucoPointsAtBet += 1
 
+        self.P1CanEscalateTrucoPoints = not self.isP1Turn
+        self.P2CanEscalateTrucoPoints = self.isP1Turn
         self.output.informarTrucoEscalation()
         self.giveControlToTheOtherPlayer()
 
@@ -264,15 +275,17 @@ class Game:
         if (self.decisionAboutEnvidoBetHasToBeMade or self.decisionAboutTrucoBetHasToBeMade):
             raise Exception(
                 "Decision about points has to be made. Cannot throw card.")
-        if (carta not in self.handP1 if self.isP1Turn else self.handP2):
+        if (carta not in (self.handP1 if self.isP1Turn else self.handP2)):
             raise Exception("Carta no se encuentra en su mano")
 
         self.cardsInMesa[self.currentTrucoStage][0 if self.isP1Turn else 1] = carta
 
         (self.handP1 if self.isP1Turn else self.handP2).remove(carta)
 
+        self.output.informarCartasEnMesa()
         self.actualizarPossibleHandsOfP2()
         self.actualizarTrucoStage()
+        self.isP1Turn = self.isP1TrucoTurn
 
     def actualizarTrucoStage(self):
         cP1 = self.cardsInMesa[self.currentTrucoStage][0]
@@ -301,7 +314,6 @@ class Game:
             self.isP1TrucoTurn = not self.isP1TrucoTurn
 
     def startNewRound(self):
-        self.output.informarInicioNuevaRonda()
         self.shouldStartNewRound = False
 
         self.cardsInMesa = [[None, None], [None, None], [None, None]]
@@ -309,6 +321,8 @@ class Game:
         self.whoWonPrimera = None
         self.currentTrucoScore = [0, 0]
         self.decisionAboutTrucoBetHasToBeMade = False
+        self.P1CanEscalateTrucoPoints = True
+        self.P2CanEscalateTrucoPoints = True
         self.trucoPointsAtPlay = 1
         self.trucoPointsAtBet = 1
         self.envidoAlreadyWasPlayed = False
@@ -327,13 +341,16 @@ class Game:
         self.possibleHandsP2 = [list(x) for x in itertools.combinations(
             self.currentDeck+self.handP2, 3)]
 
+        self.output.informarInicioNuevaRonda()
+        self.output.informarManoP2()
+
 
 def main():
 
     game = Game()
+    game.startNewRound()
 
     while(True):
-        game.startNewRound()
 
         if (game.isP1Turn):
             # Decidiendo si cantar o no envido por primera vez
@@ -351,7 +368,7 @@ def main():
                 P1probOfWinningEnvido = calculateProbabilityOfWinningEnvido(
                     game.getFullHandP1(), game.getFullPossibleHandsOfP2(), game.whoIsMano)
                 desiredEscalation = shouldEscalateEnvidoPoints(
-                    P1probOfWinningEnvido, game.gameScore, game.envidoPointsAtBet, game.envidoPointsAtPlay)
+                    P1probOfWinningEnvido, game.gameScore, game.envidoPointsAtBet, game.envidoPointsAtPlay, game)
 
                 if (desiredEscalation < 0):  # Rechaza
                     game.endEnvidoExchange(False)
@@ -366,8 +383,7 @@ def main():
                     continue
 
             if (game.decisionAboutTrucoBetHasToBeMade):  # responder a truco bet
-                probWinTruco = probOfWinningTrucoGivenHand(
-                    game.handP1, game.possibleHandsP2, game.currentTrucoScore, game.isP1TrucoTurn, game.whoIsMano, game.cardsInMesa, game.currentTrucoStage, game.whoWonPrimera)
+                probWinTruco = probOfWinningTrucoGivenHand(game)
 
                 desiredEscalation = shouldEscalateTrucoPoints(
                     probWinTruco, game.gameScore, game.trucoPointsAtBet, game.trucoPointsAtPlay)
@@ -381,23 +397,22 @@ def main():
                     continue
 
                 elif (desiredEscalation > 0):  # Escala
-                    game.escalateTruco(desiredEscalation)
+                    # Cambiarlo para que no se pase argumento, porque siempre se aumenta por 1
+                    game.escalateTruco()
                     continue
 
             else:  # ronda truco
-                probWinTruco = probOfWinningTrucoGivenHand(
-                    game.handP1, game.possibleHandsP2, game.currentTrucoScore, game.isP1TrucoTurn, game.whoIsMano, game.cardsInMesa, game.currentTrucoStage, game.whoWonPrimera)
+                probWinTruco = probOfWinningTrucoGivenHand(game)
 
-                if (game.trucoPointsAtPlay < 4):
+                if (game.trucoPointsAtPlay < 4 and game.P1CanEscalateTrucoPoints):
                     wantsToEscalate = trucoVonNeumann(
                         True, probWinTruco, game.trucoPointsAtPlay, game.trucoPointsAtPlay+1)
 
                     if (wantsToEscalate):
-                        game.escalateTruco(game.trucoPointsAtPlay+1)
+                        game.escalateTruco()
                         continue
 
-                    game.tirarCarta(bestCardToThrow(game.handP1, game.possibleHandsP2, game.currentTrucoScore,
-                                    game.isP1TrucoTurn, game.whoIsMano, game.cardsInMesa, game.currentTrucoStage, game.whoWonPrimera))
+                game.tirarCarta(bestCardToThrow(game))
 
         else:  # P2 plays
 
@@ -424,6 +439,33 @@ def main():
                 elif (desiredEscalation > 0):  # Escala
                     game.escalateEnvidoExchange(desiredEscalation)
                     continue
+
+            if (game.decisionAboutTrucoBetHasToBeMade):  # responder a truco bet
+                desiredEscalation = int(input("Desired escalation: "))
+
+                if (desiredEscalation < 0):  # Rechaza
+                    game.rejectTruco()
+                    continue
+
+                elif (desiredEscalation == 0):  # Acepta
+                    game.acceptTruco()
+                    continue
+
+                elif (desiredEscalation > 0):  # Escala
+                    game.escalateTruco()
+                    continue
+
+            else:  # ronda truco
+                if (game.P2CanEscalateTrucoPoints and game.trucoPointsAtPlay < 4):
+                    wantsToEscalate = input(
+                        "Quieres escalar puntos truco[Y-N]: ")
+
+                    if (wantsToEscalate == "Y"):
+                        game.escalateTruco()
+                        continue
+
+                cartaATirar = input("Carta a tirar: ")
+                game.tirarCarta(cartaATirar)
 
 
 if __name__ == "__main__":

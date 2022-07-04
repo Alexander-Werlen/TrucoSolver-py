@@ -1,12 +1,13 @@
 from miscelaneos import deck
 from envidoFunctions import calculateEnvidoPoints
 import random
+import copy
 
 
 def repartir():
     # returns handP1, handP2, deckOfCardsLeft
 
-    currentDeck = deck[:]
+    currentDeck = copy.deepcopy(deck)
     handP1 = []
     handP2 = []
 
@@ -26,19 +27,10 @@ def repartir():
     return handP1, handP2, currentDeck
 
 
-def gameEnded(score):
-    # Returns True if someone won, False if not
-
-    if (score[0] < 15 and score[1] < 15):
-        return False
-    else:
-        return True
-
-
 def handIsPossible(handToCheck, knownHandOfOponent):
     # Returns True if hand is possible given the conditions of the knownHand. False if not
 
-    if (calculateEnvidoPoints(handToCheck[:].append(knownHandOfOponent[0])) != knownHandOfOponent[1]):
+    if (calculateEnvidoPoints(copy.deepcopy(handToCheck) + knownHandOfOponent[0]) != knownHandOfOponent[1]):
         return False
 
     return True

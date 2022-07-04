@@ -26,7 +26,7 @@ def shouldEscalateTrucoPoints(probWinTruco, gamescore, trucoPointsAtBet, trucoPo
     return desiredPoints
 
 
-def shouldEscalateEnvidoPoints(probOfWinningEnvido, gameScore, envidoPointsAtBet, envidoPointsAtPlay):
+def shouldEscalateEnvidoPoints(probOfWinningEnvido, gameScore, envidoPointsAtBet, envidoPointsAtPlay, gameContext):
     # gameScore assumes [0] is the player making the desicion
     """ 
     Returns:
@@ -50,7 +50,7 @@ def shouldEscalateEnvidoPoints(probOfWinningEnvido, gameScore, envidoPointsAtBet
         False, probOfWinningEnvido, envidoPointsAtPlay, envidoPointsAtBet)
 
     if (wantsToAccept):
-        if (envidoPointsAtBet == 15):
+        if (gameContext.onFaltaEnvido):
             return 0
         wantsToRaise, bet = envidoVonNeumann(
             True, probOfWinningEnvido, envidoPointsAtBet, None)
